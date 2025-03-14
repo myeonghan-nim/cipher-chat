@@ -112,34 +112,34 @@ CipherChat 프로젝트의 목표는 구체적으로 다음과 같습니다.
 
 ```mermaid
 graph TD
-    U[User (Anonymous)]
+    U["User (Anonymous)"]
 
     %% 연결 및 인증
-    U --> A[Connect to CipherChat]
-    A --> B[Establish WebSocket Connection]
-    B --> C[Perform TCP Handshake & Upgrade to WebSocket]
-    A --> D[Authenticate Anonymously]
+    U --> A["Connect to CipherChat"]
+    A --> B["Establish WebSocket Connection"]
+    B --> C["Perform TCP Handshake & Upgrade to WebSocket"]
+    A --> D["Authenticate Anonymously"]
 
     %% 채팅 세션 시작
-    U --> E[Initiate Chat Session]
-    E --> F[Request Chat Partner]
-    F --> G[Match with Available User]
-    G --> H[Create Temporary Session (Generate Session ID)]
-    E --> I[Exchange Session Keys (for encryption)]
+    U --> E["Initiate Chat Session"]
+    E --> F["Request Chat Partner"]
+    F --> G["Match with Available User"]
+    G --> H["Create Temporary Session (Generate Session ID)"]
+    E --> I["Exchange Session Keys (for encryption)"]
 
     %% 메시지 송수신 및 네트워크 최적화
-    U --> J[Exchange Messages]
-    J --> K[Send Message]
-    J --> L[Receive Message]
-    J --> M[Network Optimization]
-    M --> N[Latency Measurement & Compensation]
-    M --> O[Packet Loss Detection & Retransmission]
-    M --> P[Multiplexing & Bandwidth Optimization]
+    U --> J["Exchange Messages"]
+    J --> K["Send Message"]
+    J --> L["Receive Message"]
+    J --> M["Network Optimization"]
+    M --> N["Latency Measurement & Compensation"]
+    M --> O["Packet Loss Detection & Retransmission"]
+    M --> P["Multiplexing & Bandwidth Optimization"]
 
     %% 채팅 종료 및 정리
-    U --> Q[Terminate Chat Session]
-    Q --> R[Close WebSocket Connection]
-    Q --> S[Clean-up Session Data (DBless)]
+    U --> Q["Terminate Chat Session"]
+    Q --> R["Close WebSocket Connection"]
+    Q --> S["Clean-up Session Data (DBless)"]
 ```
 
 - 연결 및 인증: 사용자는 WebSocket 연결을 수립하고 별도의 인증 과정 없이 익명으로 접속합니다.
