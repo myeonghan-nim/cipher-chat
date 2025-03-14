@@ -112,7 +112,7 @@ CipherChat 프로젝트의 목표는 구체적으로 다음과 같습니다.
 
 ```mermaid
 graph TD
-    actor U[User (Anonymous)]
+    U[User (Anonymous)]
 
     %% 연결 및 인증
     U --> A[Connect to CipherChat]
