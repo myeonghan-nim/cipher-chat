@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build: .
+    container_name: fastapi
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    networks:
+      - inner
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    environment:
+      - FASTAPI_PORT=${FASTAPI_PORT}
+      - NGINX_HTTPS_PORT=${NGINX_HTTPS_PORT}
+    ports:
+      - ${NGINX_HTTPS_PORT}:443
+    volumes:
+      - ./config/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      - ./config/nginx/entrypoint.sh:/entrypoint.sh:ro
+      - ./config/certs/nginx.crt:/etc/ssl/certs/nginx.crt:ro
+      - ./config/certs/nginx.key:/etc/ssl/private/nginx.key:ro
+    entrypoint: ["/entrypoint.sh"]
+    depends_on:
+      - fastapi
+    networks:
+      - inner
+
+networks:
+  inner:
+    driver: bridge
