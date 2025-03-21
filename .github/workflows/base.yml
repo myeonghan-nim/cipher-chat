@@ -59,4 +59,4 @@ jobs:
 
       - name: Run Docker container test
         run: |
-          docker run --rm -p 8000:8000 cipher-chat uvicorn --version
+          docker run --rm -p 8000:8000 --entrypoint uvicorn cipher-chat --version
