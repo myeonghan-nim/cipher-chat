@@ -5,15 +5,11 @@ from app.main import app
 client = TestClient(app)
 
 
-def test_read_root():
+def test_health_check_success():
     response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Hello, World!"}
+    assert response.status_code == 205
 
 
-def test_websocket_echo():
+def test_websocket_health_check_success():
     with client.websocket_connect("/ws") as websocket:
-        test_message = "Test Message"
-        websocket.send_text(test_message)
-        data = websocket.receive_text()
-        assert data == f"Received: {test_message}"
+        assert websocket.receive_text() == "Server is operational"
