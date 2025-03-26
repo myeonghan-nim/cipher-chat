@@ -1,0 +1,19 @@
+# 일반 포트 비활성화
+port 0
+
+# TLS 전용 포트 활성화
+tls-port ${REDIS_PORT}
+
+# TLS 프로토콜 지정 (TLSv1.2와 TLSv1.3만 허용)
+# tls-protocols "TLSv1.2 TLSv1.3"
+
+# TLS 관련 인증서 및 키 파일 경로
+tls-cert-file /opt/bitnami/redis/certs/redis.crt
+tls-key-file /opt/bitnami/redis/certs/redis.key
+tls-ca-cert-file /opt/bitnami/redis/certs/ca.crt
+
+# 비밀번호 지정
+requirepass ${REDIS_PASSWORD}
+
+# 클라이언트 인증 여부
+tls-auth-clients no
