@@ -4,21 +4,41 @@ services:
   fastapi:
     build: .
     container_name: fastapi
+    volumes:
+      - ${FASTAPI_SSL_CERTFILE}:/etc/ssl/certs/fastapi.crt:ro
+      - ${FASTAPI_SSL_KEYFILE}:/etc/ssl/private/fastapi.key:ro
+      - ${REDIS_SSL_CERTFILE}:/etc/ssl/certs/redis.crt:ro
+      - ${REDIS_SSL_KEYFILE}:/etc/ssl/private/redis.key:ro
+      - ${CA_CERTFILE}:/etc/ssl/certs/ca.crt:ro
     env_file:
       - .env
     expose:
-      - "8000"
+      - ${FASTAPI_PORT}
     networks:
       - outer
       - inner
 
   redis:
-    image: redis:latest
+    build:
+      context: .
+      dockerfile: ./config/redis/Dockerfile
     container_name: ${REDIS_HOST}
     environment:
+      - REDIS_TLS_ENABLED=yes
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_DB=${REDIS_DB}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_SSL_CERTFILE=${REDIS_SSL_CERTFILE}
+      - REDIS_SSL_KEYFILE=${REDIS_SSL_KEYFILE}
+      - CA_CERTFILE=${CA_CERTFILE}
+    volumes:
+      - ${REDIS_SSL_CERTFILE}:/opt/bitnami/redis/certs/redis.crt:ro
+      - ${REDIS_SSL_KEYFILE}:/opt/bitnami/redis/certs/redis.key:ro
+      - ${CA_CERTFILE}:/opt/bitnami/redis/certs/ca.crt:ro
+      - ./config/redis/redis.conf.template:/opt/bitnami/redis/etc/redis.conf.template:ro
+      - ./config/redis/entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/entrypoint.sh"]
     expose:
       - ${REDIS_PORT}
     networks:
@@ -30,13 +50,15 @@ services:
     environment:
       - FASTAPI_PORT=${FASTAPI_PORT}
       - NGINX_HTTPS_PORT=${NGINX_HTTPS_PORT}
+      - NGINX_SSL_CERTFILE=${NGINX_SSL_CERTFILE}
+      - NGINX_SSL_KEYFILE=${NGINX_SSL_KEYFILE}
     ports:
       - ${NGINX_HTTPS_PORT}:443
     volumes:
+      - ${NGINX_SSL_CERTFILE}:/etc/ssl/certs/nginx.crt:ro
+      - ${NGINX_SSL_KEYFILE}:/etc/ssl/private/nginx.key:ro
       - ./config/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
       - ./config/nginx/entrypoint.sh:/entrypoint.sh:ro
-      - ./config/certs/nginx.crt:/etc/ssl/certs/nginx.crt:ro
-      - ./config/certs/nginx.key:/etc/ssl/private/nginx.key:ro
     entrypoint: ["/entrypoint.sh"]
     depends_on:
       - fastapi
