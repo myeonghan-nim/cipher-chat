@@ -25,6 +25,32 @@ http {
     sendfile        on;
     keepalive_timeout  65;
 
+    # 보안을 위해 추가로 설정 가능한 헤더
+
+    # Strict-Transport-Security (HSTS): 브라우저가 HTTPS로만 접근 가능하도록 지시하여 중간자 공격을 예방
+    # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
+    # X-Frame-Options: 다른 사이트의 iframe에 포함되는 것을 제어하여 클릭재킹 공격을 방지
+    # add_header X-Frame-Options "SAMEORIGIN" always;
+
+    # X-Content-Type-Options: 브라우저가 MIME 스니핑을 하지 못하게 하여 콘텐츠 유형에 따른 보안을 강화
+    # add_header X-Content-Type-Options "nosniff" always;
+
+    # Content-Security-Policy (CSP): 페이지 내에서 로드할 수 있는 리소스를 제한하여 XSS 및 데이터 인젝션 공격을 예방
+    # add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; object-src 'none'; style-src 'self' 'unsafe-inline';" always;
+
+    # Referrer-Policy: 외부로 전송하는 referrer 정보의 양을 제한
+    # add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Permissions-Policy (구 Feature-Policy): 웹 브라우저 기능(예: 카메라, 마이크, 지리정보 등)에 대한 접근을 제어
+    # add_header Permissions-Policy "geolocation=(self), microphone=(), camera=()" always;
+
+    # X-XSS-Protection: 구형 브라우저에서 내장된 XSS 필터를 활성화하여 XSS 공격을 방지, 최신 브라우저는 CSP로 대체
+    # add_header X-XSS-Protection "1; mode=block" always;
+
+    # Expect-CT: 브라우저에게 인증서 투명성(CT) 검증 정책을 적용하도록 지시
+    # add_header Expect-CT "max-age=86400, enforce" always;
+
     # 업스트림 설정: FastAPI 서비스에 대한 설정
     upstream fastapi {
         # Docker Compose 내 서비스 이름 "fastapi"와 환경 변수 FASTAPI_PORT 사용
@@ -44,7 +70,11 @@ http {
 
         location / {
             # 모든 요청을 업스트림(fastapi)으로 전달
-            proxy_pass http://fastapi;
+            proxy_pass https://fastapi;
+            proxy_ssl_server_name on;
+            # production 환경에서는 self-signed가 아닌 인증서를 사용해서 검증 과정을 거쳐야 함.
+            proxy_ssl_verify off;
+
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
