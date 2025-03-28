@@ -32,7 +32,7 @@ def test_chat_success():
             ws2.send_text(reply_message)
             received_reply = ws1.receive_text(timeout=3)
             assert received_reply == reply_message
-    except WebSocketDisconnect as e:
+    except WebSocketDisconnect:
         # 연결 종료 시 발생하는 WebSocketDisconnect는 테스트 종료 시 자연스러운 동작으로 간주
         # 테스트 내 메시지 교환은 이미 검증했으므로 예외를 무시
         pass
