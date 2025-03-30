@@ -17,3 +17,6 @@ requirepass ${REDIS_PASSWORD}
 
 # 클라이언트 인증 여부
 tls-auth-clients no
+
+# DBless
+stop-writes-on-bgsave-error no
