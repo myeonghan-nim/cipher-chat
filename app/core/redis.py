@@ -14,4 +14,6 @@ redis_client = redis.Redis(
     ssl_ca_certs="/etc/ssl/certs/ca.crt",
     # hostname 검증 옵션
     ssl_check_hostname=False,
+    # 리소스 제한
+    max_connections=100,
 )
