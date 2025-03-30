@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Response, WebSocket
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.endpoints.chat import router as chat_router
 from app.endpoints.session import router as session_router
@@ -29,3 +30,5 @@ async def websocket_health_check(websocket: WebSocket):
 app.include_router(session_router, prefix="/session", tags=["session"])
 # 채팅 관련 엔드포인트 통합
 app.include_router(chat_router, prefix="/chat", tags=["chat"])
+# Prometheus Instrumentator 설정: /metrics 엔드포인트 노출
+Instrumentator().instrument(app).expose(app)
