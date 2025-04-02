@@ -1,9 +1,26 @@
 version: '3.8'
 
 services:
-  fastapi:
+  fastapi1:
     build: .
-    container_name: fastapi
+    container_name: fastapi1
+    volumes:
+      - ${FASTAPI_SSL_CERTFILE}:/etc/ssl/certs/fastapi.crt:ro
+      - ${FASTAPI_SSL_KEYFILE}:/etc/ssl/private/fastapi.key:ro
+      - ${REDIS_SSL_CERTFILE}:/etc/ssl/certs/redis.crt:ro
+      - ${REDIS_SSL_KEYFILE}:/etc/ssl/private/redis.key:ro
+      - ${CA_CERTFILE}:/etc/ssl/certs/ca.crt:ro
+    env_file:
+      - .env
+    expose:
+      - ${FASTAPI_PORT}
+    networks:
+      - outer
+      - inner
+
+  fastapi2:
+    build: .
+    container_name: fastapi2
     volumes:
       - ${FASTAPI_SSL_CERTFILE}:/etc/ssl/certs/fastapi.crt:ro
       - ${FASTAPI_SSL_KEYFILE}:/etc/ssl/private/fastapi.key:ro
@@ -61,7 +78,8 @@ services:
       - ./config/nginx/entrypoint.sh:/entrypoint.sh:ro
     entrypoint: ["/entrypoint.sh"]
     depends_on:
-      - fastapi
+      - fastapi1
+      - fastapi2
     networks:
       - outer
 

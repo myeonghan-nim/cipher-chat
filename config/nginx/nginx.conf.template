@@ -52,9 +52,10 @@ http {
     # add_header Expect-CT "max-age=86400, enforce" always;
 
     # 업스트림 설정: FastAPI 서비스에 대한 설정
-    upstream fastapi {
+    upstream fastapi_servers {
         # Docker Compose 내 서비스 이름 "fastapi"와 환경 변수 FASTAPI_PORT 사용
-        server fastapi:${FASTAPI_PORT};
+        server fastapi1:${FASTAPI_PORT};
+        server fastapi2:${FASTAPI_PORT};
     }
 
     server {
@@ -70,7 +71,7 @@ http {
 
         location / {
             # 모든 요청을 업스트림(fastapi)으로 전달
-            proxy_pass https://fastapi;
+            proxy_pass https://fastapi_servers;
             proxy_ssl_server_name on;
             # production 환경에서는 self-signed가 아닌 인증서를 사용해서 검증 과정을 거쳐야 함.
             proxy_ssl_verify off;
