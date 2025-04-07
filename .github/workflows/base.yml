@@ -7,8 +7,9 @@ on:
     branches: [ "*" ]
 
 jobs:
-  test:
+  pytest:
     runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -44,19 +45,67 @@ jobs:
         run: |
           pytest --maxfail=1 --disable-warnings -q
 
-  build:
-    runs-on: ubuntu-latest
-    needs: test
+  k6:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.12]
+
+    needs: pytest
     if: |
       success()
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Build Docker image
+      - name: Generate .env file from template
         run: |
-          docker build -t cipher-chat .
+          cp .env.template .env
+          sed -i "s|^FASTAPI_SSL_CERTFILE=.*|FASTAPI_SSL_CERTFILE=${{ secrets.FASTAPI_SSL_CERTFILE_PATH }}|g" .env
+          sed -i "s|^FASTAPI_SSL_KEYFILE=.*|FASTAPI_SSL_KEYFILE=${{ secrets.FASTAPI_SSL_KEYFILE_PATH }}|g" .env
+          sed -i "s|^NGINX_SSL_CERTFILE=.*|NGINX_SSL_CERTFILE=${{ secrets.NGINX_SSL_CERTFILE_PATH }}|g" .env
+          sed -i "s|^NGINX_SSL_KEYFILE=.*|NGINX_SSL_KEYFILE=${{ secrets.NGINX_SSL_KEYFILE_PATH }}|g" .env
+          sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}|g" .env
+          sed -i "s|^REDIS_SSL_CERTFILE=.*|REDIS_SSL_CERTFILE=${{ secrets.REDIS_SSL_CERTFILE_PATH }}|g" .env
+          sed -i "s|^REDIS_SSL_KEYFILE=.*|REDIS_SSL_KEYFILE=${{ secrets.REDIS_SSL_KEYFILE_PATH }}|g" .env
+          sed -i "s|^CA_CERTFILE=.*|CA_CERTFILE=${{ secrets.CA_CERTFILE_PATH }}|g" .env
+          cat .env
 
-      - name: Run Docker container test
+      - name: Create certificate files from Secrets
         run: |
-          docker run --rm -p 8000:8000 --entrypoint uvicorn cipher-chat --version
+          mkdir -p config/certs config/redis/certs
+          echo "${{ secrets.FASTAPI_SSL_CERTFILE_CONTENT }}" > $(grep "^FASTAPI_SSL_CERTFILE=" .env | cut -d '=' -f2)
+          echo "${{ secrets.FASTAPI_SSL_KEYFILE_CONTENT }}" > $(grep "^FASTAPI_SSL_KEYFILE=" .env | cut -d '=' -f2)
+          echo "${{ secrets.NGINX_SSL_CERTFILE_CONTENT }}" > $(grep "^NGINX_SSL_CERTFILE=" .env | cut -d '=' -f2)
+          echo "${{ secrets.NGINX_SSL_KEYFILE_CONTENT }}" > $(grep "^NGINX_SSL_KEYFILE=" .env | cut -d '=' -f2)
+          echo "${{ secrets.REDIS_SSL_CERTFILE_CONTENT }}" > $(grep "^REDIS_SSL_CERTFILE=" .env | cut -d '=' -f2)
+          echo "${{ secrets.REDIS_SSL_KEYFILE_CONTENT }}" > $(grep "^REDIS_SSL_KEYFILE=" .env | cut -d '=' -f2)
+          echo "${{ secrets.CA_CERTFILE_CONTENT }}" > $(grep "^CA_CERTFILE=" .env | cut -d '=' -f2)
+
+      - name: Start docker compose services
+        run: |
+          docker-compose up -d
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run k6 session test
+        run: |
+          k6 run --insecure-skip-tls-verify scripts/session.js
+
+      - name: Run k6 chat test
+        run: |
+          k6 run --insecure-skip-tls-verify scripts/chat.js
+
+      - name: Tear down docker compose environment
+        if: always()
+        run: |
+          docker-compose down -v
