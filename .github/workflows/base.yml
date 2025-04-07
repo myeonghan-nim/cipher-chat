@@ -87,7 +87,7 @@ jobs:
 
       - name: Start docker compose services
         run: |
-          docker-compose up -d
+          docker compose up -d
 
       - name: Install k6
         run: |
@@ -108,4 +108,4 @@ jobs:
       - name: Tear down docker compose environment
         if: always()
         run: |
-          docker-compose down -v
+          docker compose down -v
