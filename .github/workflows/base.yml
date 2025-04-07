@@ -99,11 +99,11 @@ jobs:
 
       - name: Run k6 session test
         run: |
-          k6 run --insecure-skip-tls-verify scripts/session.js
+          k6 run --insecure-skip-tls-verify scripts/k6/session.js
 
       - name: Run k6 chat test
         run: |
-          k6 run --insecure-skip-tls-verify scripts/chat.js
+          k6 run --insecure-skip-tls-verify scripts/k6/chat.js
 
       - name: Tear down docker compose environment
         if: always()
